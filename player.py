@@ -1,28 +1,11 @@
-import random
-
 import pygame
 from variables import global_variables
 from nn import NeuralNetwork
+import math
 
 
-def create_nn_input(screen_width, screen_height, obstacles, player_x, player_y):
-
-    nn_input = [player_x / screen_width, (player_y + 100) / screen_height]
-    for i in range(4):
-        try:
-            y, x = obstacles[i].items()[0]
-            nn_input.append(x / screen_width)
-            nn_input.append((y + 100) / screen_height)
-            # nn_input.append(x * (y + 100) / (screen_width * screen_height))
-            nn_input.append(((y + 100) - (player_y + 100)) / screen_height)
-
-        except:
-            nn_input.append(1)
-            nn_input.append(1)
-            # nn_input.append(1)
-            nn_input.append(1)
-
-    return nn_input
+def eucidelian_dist(x1, x2, y1, y2):
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -55,8 +38,46 @@ class Player(pygame.sprite.Sprite):
         if self.game_mode == "Neuroevolution":
             self.fitness = 0  # Initial fitness
 
-            layer_sizes = [14, 50, 2]  # TODO (Design your architecture here by changing the values)
+            layer_sizes = [19, 64, 2]  # TODO (Design your architecture here by changing the values)
             self.nn = NeuralNetwork(layer_sizes)
+
+    def create_nn_input(self, screen_width, screen_height, obstacles, player_x, player_y):
+
+        nn_input = [player_x / screen_width]
+
+        if self.player_gravity == 'left':
+            way = 0
+        else:
+            way = 1
+        nn_input.append(way)
+        flag = False
+
+        for i in range(2):
+            try:
+                y, x = obstacles[i]['y'], obstacles[i]['x']
+                nn_input.append((eucidelian_dist(player_x, x, player_y, y) - 5) /
+                                math.sqrt(screen_height ** 2 + screen_width ** 2))
+            except:
+                nn_input.append(1)
+
+        for i in range(5):
+            try:
+                y, x = obstacles[i]['y'], obstacles[i]['x']
+                nn_input.append(x / screen_width)
+
+                nn_input.append((y + 115) / screen_height)
+                nn_input.append((-(y + 115) + (player_y + 110)) / screen_height )
+
+            except:
+                if self.player_gravity == 'left':
+                    nn_input.append(1)
+                else:
+                    nn_input.append(0)
+
+                nn_input.append(0)
+                nn_input.append(1)
+
+        return nn_input
 
     def think(self, screen_width, screen_height, obstacles, player_x, player_y):
         """
@@ -73,15 +94,17 @@ class Player(pygame.sprite.Sprite):
         """
         # TODO (change player's gravity here by calling self.change_gravity)
 
-        nn_input = create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
+        nn_input = self.create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
+        # print(player_y, player_x)
         nn_output = self.nn.forward(nn_input)
-        new_gravity = ''
-        # print(nn_output)
-        if nn_output[0] > nn_output[1]:
-            new_gravity = 'left'
-        else:
-            new_gravity = 'right'
 
+        if nn_output[0] > 0.5:
+            new_gravity = 'left'
+
+        elif nn_output[1] > 0.5:
+            new_gravity = 'right'
+        else:
+            new_gravity = self.player_gravity
         self.change_gravity(new_gravity)
 
         # This is a test code that changes the gravity based on a random number. Remove it before your implementation.
@@ -143,6 +166,7 @@ class Player(pygame.sprite.Sprite):
             self.player_input()
         if self.game_mode == "Neuroevolution":
             obstacles = []
+
             for obstacle in global_variables['obstacle_groups']:
                 if obstacle.rect.y <= 656:
                     obstacles.append({'x': obstacle.rect.x, 'y': obstacle.rect.y})

@@ -26,6 +26,9 @@ def display_generation():
     score_surf = small_game_font.render(f"Generation: {generation}", False, (64, 64, 64))
     score_rect = score_surf.get_rect(topleft=(8, 50))
     screen.blit(score_surf, score_rect)
+    score_surf = small_game_font.render(f"players left: {len(players)}", False, (64, 64, 64))
+    score_rect = score_surf.get_rect(topleft=(8, 80))
+    screen.blit(score_surf, score_rect)
 
 
 class Obstacle(pygame.sprite.Sprite):
@@ -122,7 +125,7 @@ def update_fitness():
 
 
 def reset_timer_and_seed():
-    np.random.seed(35)
+    np.random.seed(33)
     pygame.time.set_timer(snail_timer, 500)
     pygame.time.set_timer(fly_timer, 4750)
 
@@ -143,7 +146,6 @@ if __name__ == '__main__':
     start_time = 0
     best_score = 0
     num_players = 300
-
     background_surface = pygame.image.load('graphics/Background.jpg').convert()
 
     # Players
