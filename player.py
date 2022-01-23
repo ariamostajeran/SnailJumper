@@ -3,26 +3,11 @@ import random
 import pygame
 from variables import global_variables
 from nn import NeuralNetwork
+import math
+import numpy as np
 
-
-def create_nn_input(screen_width, screen_height, obstacles, player_x, player_y):
-
-    nn_input = [player_x / screen_width, (player_y + 100) / screen_height]
-    for i in range(4):
-        try:
-            y, x = obstacles[i].items()[0]
-            nn_input.append(x / screen_width)
-            nn_input.append((y + 100) / screen_height)
-            # nn_input.append(x * (y + 100) / (screen_width * screen_height))
-            nn_input.append(((y + 100) - (player_y + 100)) / screen_height)
-
-        except:
-            nn_input.append(1)
-            nn_input.append(1)
-            # nn_input.append(1)
-            nn_input.append(1)
-
-    return nn_input
+def eucidelian_dist(x1, x2, y1, y2):
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
 class Player(pygame.sprite.Sprite):
@@ -55,8 +40,50 @@ class Player(pygame.sprite.Sprite):
         if self.game_mode == "Neuroevolution":
             self.fitness = 0  # Initial fitness
 
-            layer_sizes = [14, 50, 2]  # TODO (Design your architecture here by changing the values)
+            layer_sizes = [8, 32, 2]  # TODO (Design your architecture here by changing the values)
             self.nn = NeuralNetwork(layer_sizes)
+
+    def create_nn_input(self, screen_width, screen_height, obstacles, player_x, player_y):
+
+        nn_input = [player_x / screen_width, player_y / screen_height]
+
+        for i in range(3):
+            try:
+                y, x = obstacles[i]['y'], obstacles[i]['x']
+                if y - 2 < player_y:
+                    nn_input.append((screen_height - y) / screen_height)
+                    nn_input.append(x / screen_width)
+                else:
+                    nn_input.append(1)
+                    nn_input.append(1)
+            except:
+                    nn_input.append(1)
+                    nn_input.append(1)
+
+        return nn_input
+
+    def create_nn_input_with_bn(self, screen_height, obstacles, player_x, player_y): #batch normalization
+
+        nn_input = [player_x]
+        for i in range(3):
+            try:
+                y, x = obstacles[i]['y'], obstacles[i]['x']
+                if y - 2 < player_y:
+                    nn_input.append((screen_height - y))
+                    nn_input.append(x)
+                else:
+                    nn_input.append(1)
+                    nn_input.append(1)
+            except:
+                nn_input.append(1)
+                nn_input.append(1)
+
+        nn_input = np.array(nn_input)
+        batch_mean = sum(nn_input) / len(nn_input)
+        batch_var = sum((nn_input - batch_mean) ** 2) / len(nn_input)
+        nn_input = (nn_input - batch_mean) / (math.sqrt(batch_var + 1e-8))
+        return nn_input
+
 
     def think(self, screen_width, screen_height, obstacles, player_x, player_y):
         """
@@ -73,14 +100,17 @@ class Player(pygame.sprite.Sprite):
         """
         # TODO (change player's gravity here by calling self.change_gravity)
 
-        nn_input = create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
+        nn_input = self.create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
+        # nn_input = self.create_nn_input_with_bn(screen_height, obstacles, player_x, player_y)
         nn_output = self.nn.forward(nn_input)
         new_gravity = ''
         # print(nn_output)
-        if nn_output[0] > nn_output[1]:
+        if nn_output[0] > 0.5:
             new_gravity = 'left'
-        else:
+        elif nn_input[1] > 0.5:
             new_gravity = 'right'
+        else:
+            new_gravity = self.player_gravity
 
         self.change_gravity(new_gravity)
 

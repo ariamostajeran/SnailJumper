@@ -47,7 +47,9 @@ class NeuralNetwork:
 
         x = np.array(x)
         x = x.reshape(self.layer_sizes[0], 1)
-        A1 = self.activation(self.W_1 @ x + self.b_1)  # (50, 1)
+        z1 = self.W_1 @ x + self.b_1
+        # z1_hat = (z1 - np.mean(z1)) / np.std(z1)
+        A1 = self.activation(z1)  # (50, 1)
 
         out = self.activation(self.W_2 @ A1 + self.b_2)  # (2, 1)
         # print(f"a2 shape {out.shape}")

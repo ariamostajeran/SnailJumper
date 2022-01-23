@@ -1,5 +1,5 @@
 from sys import exit
-# from numpy.random import randint, choice
+from numpy.random import randint, choice
 import numpy as np
 
 from evolution import Evolution
@@ -25,6 +25,9 @@ def display_best_score():
 def display_generation():
     score_surf = small_game_font.render(f"Generation: {generation}", False, (64, 64, 64))
     score_rect = score_surf.get_rect(topleft=(8, 50))
+    screen.blit(score_surf, score_rect)
+    score_surf = small_game_font.render(f"players left: {len(players)}", False, (64, 64, 64))
+    score_rect = score_surf.get_rect(topleft=(8, 80))
     screen.blit(score_surf, score_rect)
 
 
