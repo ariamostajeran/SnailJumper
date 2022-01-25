@@ -64,7 +64,7 @@ class Player(pygame.sprite.Sprite):
 
     def create_nn_input_with_bn(self, screen_height, obstacles, player_x, player_y): #batch normalization
 
-        nn_input = [player_x]
+        nn_input = [player_x, player_y]
         for i in range(3):
             try:
                 y, x = obstacles[i]['y'], obstacles[i]['x']
@@ -100,8 +100,8 @@ class Player(pygame.sprite.Sprite):
         """
         # TODO (change player's gravity here by calling self.change_gravity)
 
-        nn_input = self.create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
-        # nn_input = self.create_nn_input_with_bn(screen_height, obstacles, player_x, player_y)
+        # nn_input = self.create_nn_input(screen_width, screen_height, obstacles, player_x, player_y)
+        nn_input = self.create_nn_input_with_bn(screen_height, obstacles, player_x, player_y)
         nn_output = self.nn.forward(nn_input)
         new_gravity = ''
         # print(nn_output)

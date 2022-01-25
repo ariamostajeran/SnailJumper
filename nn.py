@@ -26,7 +26,7 @@ class NeuralNetwork:
 
         # pass
 
-    def activation(self, x):
+    def activation(self, x, function='sigmoid'):
         """
         The activation function of our neural network, e.g., Sigmoid, ReLU.
         :param x: Vector of a layer in our network.
@@ -34,7 +34,10 @@ class NeuralNetwork:
         """
         # TODO (Implement activation function here)
         # Sigmoid activation function
-        return 1 / (1 + np.exp(-x))
+        if function == 'softmax':
+            return np.exp(x) / np.exp(x).sum()
+        else:
+            return 1 / (1 + np.exp(-x))
 
     def forward(self, x):
         """
@@ -51,7 +54,7 @@ class NeuralNetwork:
         # z1_hat = (z1 - np.mean(z1)) / np.std(z1)
         A1 = self.activation(z1)  # (50, 1)
 
-        out = self.activation(self.W_2 @ A1 + self.b_2)  # (2, 1)
+        out = self.activation(self.W_2 @ A1 + self.b_2, function='softmax')  # (2, 1)
         # print(f"a2 shape {out.shape}")
 
         return out
