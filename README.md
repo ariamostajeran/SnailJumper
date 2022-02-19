@@ -5,4 +5,4 @@ Snail jumper game with neuroevolution
 $ game.py
 
 # Intro
-For more introduction visit : [https://github.com/aria-mstj/SnailJumper/blob/main/intro.pdf](introduction)
+For more introduction visit : [introduction](https://github.com/aria-mstj/SnailJumper/blob/main/intro.pdf)
